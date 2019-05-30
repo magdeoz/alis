@@ -386,7 +386,7 @@ function partition() {
     if [ "$LVM" == "true" ]; then
         pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
         vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
-        lvcreate -L 25G $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
+        lvcreate -L $ROOT_SIZE $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
         lvcreate -l 100%FREE -n $LVM_VOLUME_HOME $LVM_VOLUME_GROUP
         DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_ROOT"
         DEVICE_HOME="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_HOME"
