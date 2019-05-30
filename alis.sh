@@ -48,7 +48,8 @@ PARTITION_ROOT=""
 DEVICE_ROOT=""
 LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg"
-LVM_VOLUME_LOGICAL="root"
+LVM_VOLUME_ROOT="root"
+LVM_VOLUME_HOME="home"
 BOOT_DIRECTORY=""
 ESP_DIRECTORY=""
 #PARTITION_BOOT_NUMBER=0
@@ -384,9 +385,10 @@ function partition() {
     if [ "$LVM" == "true" ]; then
         pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
         vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
-        lvcreate -l 100%FREE -n $LVM_VOLUME_LOGICAL $LVM_VOLUME_GROUP
-
-        DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_LOGICAL"
+        lvcreate -L 25G $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
+        lvcreate -l 100%FREE -n $LVM_VOLUME_HOME $LVM_VOLUME_GROUP
+        DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_ROOT"
+        DEVICE_HOME="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_HOME"
     fi
 
     if [ "$BIOS_TYPE" == "uefi" ]; then
@@ -394,6 +396,7 @@ function partition() {
         wipefs -a $DEVICE_ROOT
         mkfs.fat -n ESP -F32 $PARTITION_BOOT
         mkfs."$FILE_SYSTEM_TYPE" -L root $DEVICE_ROOT
+        mkfs."$FILE_SYSTEM_TYPE" -L home $DEVICE_HOME
     fi
 
     if [ "$BIOS_TYPE" == "bios" ]; then
@@ -412,7 +415,8 @@ function partition() {
     fi
 
     mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
-
+    mkdir /mnt/home
+    mount -o "$PARTITION_OPTIONS" "$DEVICE_HOME" /mnt/home
     mkdir /mnt/boot
     mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
 
