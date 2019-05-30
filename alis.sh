@@ -376,7 +376,7 @@ function partition() {
     fi
 
     if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
-        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-size=512 --key-file=- luksFormat --type luks2 $PARTITION_ROOT
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random --verify-passphrase luksFormat --type luks2 $PARTITION_ROOT
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
         sleep 5
     fi
