@@ -284,9 +284,9 @@ function prepare_partition() {
         umount /mnt/boot
         umount /mnt
     fi
-    if [ -e "/dev/mapper/$LVM_VOLUME_LOGICAL" ]; then
+    if [ -e "/dev/mapper/$LVM_VOLUME_ROOT" ]; then
         if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
-            cryptsetup close $LVM_VOLUME_LOGICAL
+            cryptsetup close $LVM_VOLUME_ROOT
         fi
     fi
     if [ -e "/dev/mapper/$LVM_VOLUME_PHISICAL" ]; then
