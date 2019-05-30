@@ -83,6 +83,7 @@ function sanitize_variables() {
     FILE_SYSTEM_TYPE=$(sanitize_variable "$FILE_SYSTEM_TYPE")
     SWAP_SIZE=$(sanitize_variable "$SWAP_SIZE")
     KERNELS=$(sanitize_variable "$KERNELS")
+    ROOT_SIZE=$(sanitize_variable "$ROOT_SIZE")
     KERNELS_COMPRESSION=$(sanitize_variable "$KERNELS_COMPRESSION")
     BOOTLOADER=$(sanitize_variable "$BOOTLOADER")
     DESKTOP_ENVIRONMENT=$(sanitize_variable "$DESKTOP_ENVIRONMENT")
@@ -156,7 +157,7 @@ function check_variables_list() {
     REQUIRED=$4
     if [ "$REQUIRED" == "" -o "$REQUIRED" == "true" ]; then
         check_variables_value "$NAME" "$VALUE"
-    fi
+    
 
     if [ "$VALUE" != "" -a -z "$(echo "$VALUES" | grep -F -w "$VALUE")" ]; then
         echo "$NAME environment variable value [$VALUE] must be in [$VALUES]."
