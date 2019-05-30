@@ -157,7 +157,7 @@ function check_variables_list() {
     REQUIRED=$4
     if [ "$REQUIRED" == "" -o "$REQUIRED" == "true" ]; then
         check_variables_value "$NAME" "$VALUE"
-    
+    fi
 
     if [ "$VALUE" != "" -a -z "$(echo "$VALUES" | grep -F -w "$VALUE")" ]; then
         echo "$NAME environment variable value [$VALUE] must be in [$VALUES]."
