@@ -378,7 +378,7 @@ function partition() {
     fi
 
     if [ -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" ]; then
-        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random --verify-passphrase luksFormat --type luks2 $PARTITION_ROOT
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
         sleep 5
     fi
@@ -417,9 +417,17 @@ function partition() {
 
     mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
     mkdir /mnt/home
-    mount -o "$PARTITION_OPTIONS" "$DEVICE_HOME" /mnt/home
+    #mount -o "$PARTITION_OPTIONS" "$DEVICE_HOME" /mnt/home
     mkdir /mnt/boot
     mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
+
+    ##test
+    mkdir -m 700 /mnt/etc/luks-keys
+    dd if=/dev/random of=/mnt/etc/luks-keys/home bs=1 count=256 status=progress
+    cryptsetup luksFormat -v /dev/$LVM_VOLUME_GROUP/home /mnt/etc/luks-keys/home
+    cryptsetup -d /etc/luks-keys/home open /dev/$LVM_VOLUME_GROUP/home home
+    mkfs.ext4 /dev/mapper/home
+    mount /dev/mapper/home /mnt/home
 
     if [ -n "$SWAP_SIZE" -a "$FILE_SYSTEM_TYPE" != "btrfs" ]; then
         fallocate -l $SWAP_SIZE /mnt/swap
@@ -497,6 +505,8 @@ function configuration() {
     fi
 
     printf "$ROOT_PASSWORD\n$ROOT_PASSWORD" | arch-chroot /mnt passwd
+    echo -e "home /dev/$LVM_VOLUME_GROUP/home   /etc/luks-keys/home" >> /mnt/etc/crypttab
+
 }
 
 function network() {
