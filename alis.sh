@@ -421,14 +421,6 @@ function partition() {
     mkdir /mnt/boot
     mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
 
-    ##test
-    mkdir -m 700 /mnt/etc/luks-keys
-    dd if=/dev/random of=/mnt/etc/luks-keys/home bs=1 count=256 status=progress
-    cryptsetup luksFormat -v /dev/$LVM_VOLUME_GROUP/home /mnt/etc/luks-keys/home
-    cryptsetup -d /etc/luks-keys/home open /dev/$LVM_VOLUME_GROUP/home home
-    mkfs.ext4 /dev/mapper/home
-    mount /dev/mapper/home /mnt/home
-
     if [ -n "$SWAP_SIZE" -a "$FILE_SYSTEM_TYPE" != "btrfs" ]; then
         fallocate -l $SWAP_SIZE /mnt/swap
         chmod 600 /mnt/swap
@@ -462,6 +454,12 @@ function install() {
     if [ "$DEVICE_TRIM" == "true" ]; then
         arch-chroot /mnt systemctl enable fstrim.timer
     fi
+    mkdir -m 700 /mnt/etc/luks-keys
+    dd if=/dev/random of=/mnt/etc/luks-keys/home bs=1 count=256 status=progress
+    cryptsetup luksFormat -v /dev/$LVM_VOLUME_GROUP/home /mnt/etc/luks-keys/home
+    cryptsetup -d /etc/luks-keys/home open /dev/$LVM_VOLUME_GROUP/home home
+    mkfs.ext4 /dev/mapper/home
+    mount /dev/mapper/home /mnt/home
 }
 
 function kernels() {
