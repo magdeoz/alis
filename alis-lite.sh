@@ -36,13 +36,8 @@ PARTUUID_ROOT=""
 
 function sanitize_variables() {
     DEVICE=$(sanitize_variable "$DEVICE")
-    FILE_SYSTEM_TYPE=$(sanitize_variable "$FILE_SYSTEM_TYPE")
     SWAP_SIZE=$(sanitize_variable "$SWAP_SIZE")
     ROOT_SIZE=$(sanitize_variable "$ROOT_SIZE")
-    BOOTLOADER=$(sanitize_variable "$BOOTLOADER")
-    PACKAGES_PACMAN=$(sanitize_variable "$PACKAGES_PACMAN")
-    AUR=$(sanitize_variable "$AUR")
-    PACKAGES_AUR=$(sanitize_variable "$PACKAGES_AUR")
 }
 
 function sanitize_variable() {
@@ -65,16 +60,6 @@ function check_variables() {
     check_variables_value "USER_PASSWORD" "$USER_PASSWORD"
     check_variables_equals "ROOT_PASSWORD" "ROOT_PASSWORD_RETYPE" "$ROOT_PASSWORD" "$ROOT_PASSWORD_RETYPE"
     check_variables_equals "USER_PASSWORD" "USER_PASSWORD_RETYPE" "$USER_PASSWORD" "$USER_PASSWORD_RETYPE"
-    check_variables_size "ADDITIONAL_USER_PASSWORDS" "${#ADDITIONAL_USER_NAMES_ARRAY[@]}" "${#ADDITIONAL_USER_PASSWORDS_ARRAY[@]}"
-    check_variables_list "BOOTLOADER" "$BOOTLOADER" "grub refind systemd"
-    check_variables_list "AUR" "$AUR" "aurman yay"
-    check_variables_list "DESKTOP_ENVIRONMENT" "$DESKTOP_ENVIRONMENT" "gnome kde xfce mate cinnamon lxde" "false"
-    check_variables_list "DISPLAY_DRIVER" "$DISPLAY_DRIVER" "intel amdgpu ati nvidia nvidia-lts nvidia-390xx nvidia-390xx-lts nvidia-340xx nvidia-340xx-lts nouveau" "false"
-    check_variables_boolean "KMS" "$KMS"
-    check_variables_boolean "DISPLAY_DRIVER_DDX" "$DISPLAY_DRIVER_DDX"
-    check_variables_boolean "DISPLAY_DRIVER_HARDWARE_ACCELERATION" "$DISPLAY_DRIVER_HARDWARE_ACCELERATION"
-    check_variables_list "DISPLAY_DRIVER_HARDWARE_ACCELERATION_INTEL" "$DISPLAY_DRIVER_HARDWARE_ACCELERATION_INTEL" "intel-media-driver libva-intel-driver" "false"
-    check_variables_boolean "REBOOT" "$REBOOT"
 }
 
 function check_variables_value() {
@@ -251,3 +236,4 @@ function main (){
         users
 }
 
+main
