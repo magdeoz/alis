@@ -202,10 +202,6 @@ function mkinitcpio(){
 function bootloader(){
         BOOTLOADER_ALLOW_DISCARDS=":allow-discards"
         CMDLINE_LINUX="cryptdevice=PARTUUID=$PARTUUID_ROOT:$LVM_VOLUME_PHISICAL$BOOTLOADER_ALLOW_DISCARDS"
-}
-
-
-function grub() {
         pacman_install "grub dosfstools"
         arch-chroot /mnt sed -i 's/GRUB_DEFAULT=0/GRUB_DEFAULT=saved/' /etc/default/grub
         arch-chroot /mnt sed -i 's/#GRUB_SAVEDEFAULT="true"/GRUB_SAVEDEFAULT="true"/' /etc/default/grub
@@ -235,3 +231,30 @@ function create_user() {
     arch-chroot /mnt useradd -m -G wheel,storage,optical -s /bin/bash $USER_NAME
     printf "$USER_PASSWORD\n$USER_PASSWORD" | arch-chroot /mnt passwd $USER_NAME
 }
+
+
+function pacman_install() {
+    PACKAGES=$1
+    for VARIABLE in {1..5}
+    do
+        arch-chroot /mnt pacman -Syu --noconfirm $PACKAGES
+        if [ $? == 0 ]; then
+            break
+        else
+            sleep 10
+        fi
+    done
+}
+
+function main (){
+        configuration_install
+        sanitize_variables
+        check_variables
+        partition
+        install
+        configuration
+        mkinitcpio
+        bootloader
+        users
+}
+
