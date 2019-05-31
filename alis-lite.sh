@@ -18,6 +18,8 @@
 #===============================================================================
 
 set -o nounset                              # Treat unset variables as an error
+DEVICE="/dev/sda"
+FILE_SYSTEM_TYPE="ext4"
 LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg"
 LVM_VOLUME_ROOT="root"
@@ -53,16 +55,7 @@ function sanitize_variable() {
 }
 
 function check_variables() {
-    check_variables_value "KEYS" "$KEYS"
-    check_variables_boolean "LOG" "$LOG"
-    check_variables_value "DEVICE" "$DEVICE"
-    check_variables_boolean "LVM" "$LVM"
     check_variables_equals "PARTITION_ROOT_ENCRYPTION_PASSWORD" "PARTITION_ROOT_ENCRYPTION_PASSWORD_RETYPE" "$PARTITION_ROOT_ENCRYPTION_PASSWORD" "$PARTITION_ROOT_ENCRYPTION_PASSWORD_RETYPE"
-    check_variables_list "FILE_SYSTEM_TYPE" "$FILE_SYSTEM_TYPE" "ext4 btrfs xfs"
-    check_variables_value "PING_HOSTNAME" "$PING_HOSTNAME"
-    check_variables_value "PACMAN_MIRROR" "$PACMAN_MIRROR"
-    check_variables_list "KERNELS" "$KERNELS" "linux-lts linux-lts-headers linux-hardened linux-hardened-headers linux-zen linux-zen-headers" "false"
-    check_variables_list "KERNELS_COMPRESSION" "$KERNELS_COMPRESSION" "gzip bzip2 lzma xz lzop lz4" "false"
     check_variables_value "TIMEZONE" "$TIMEZONE"
     check_variables_value "LOCALE" "$LOCALE"
     check_variables_value "LANG" "$LANG"
