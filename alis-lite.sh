@@ -21,7 +21,7 @@ set -o nounset                              # Treat unset variables as an error
 DEVICE="/dev/sda"
 FILE_SYSTEM_TYPE="ext4"
 LVM_VOLUME_PHISICAL="lvm"
-LVM_VOLUME_GROUP="vg0'"
+LVM_VOLUME_GROUP="vg0"
 LVM_VOLUME_SWAP="swap"
 LVM_VOLUME_ROOT="root"
 LVM_VOLUME_HOME="home"
@@ -134,7 +134,7 @@ function configuration (){
         mkfs."$FILE_SYSTEM_TYPE" /dev/mapper/home
         mount /dev/mapper/home /mnt/home
         echo "home /dev/$LVM_VOLUME_GROUP/home   /etc/luks-keys/home" >> /mnt/etc/crypttab
-
+        arch-chroot /mnt sed -i 's\^.*home.*$\/dev/mapper/home        /home   ext4        defaults        0       2\' /etc/fstab
         ##
         genfstab -U /mnt >> /mnt/etc/fstab
         arch-chroot /mnt ln -s -f $TIMEZONE /etc/localtime
