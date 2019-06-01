@@ -74,47 +74,46 @@ DEVICE_SATA="true"
 timedatectl set-ntp true
 
 function partition() {
-    echo ""
-    sgdisk --zap-all $DEVICE
-    wipefs -a $DEVICE
-    PARTITION_BOOT="${DEVICE}1"
-    PARTITION_ROOT="${DEVICE}2"
-    DEVICE_ROOT="${DEVICE}2"
-    parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary $FILE_SYSTEM_TYPE 512MiB 100% set 1 boot on
-    sgdisk -t=1:ef00 $DEVICE
-    sgdisk -t=2:8e00 $DEVICE
-    echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
-     echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
-     sleep 5
-     pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
-     vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
-     lvcreate -L $ROOT_SIZE $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
-     lvcreate -l 100%FREE -n $LVM_VOLUME_HOME $LVM_VOLUME_GROUP
-     DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_ROOT"
-     DEVICE_HOME="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_HOME"
-     wipefs -a $PARTITION_BOOT
-     wipefs -a $DEVICE_ROOT
-     mkfs.fat -n ESP -F32 $PARTITION_BOOT
-     mkfs."$FILE_SYSTEM_TYPE" -L root $DEVICE_ROOT
-     mkfs."$FILE_SYSTEM_TYPE" -L home $DEVICE_HOME
-
-      PARTITION_OPTIONS="defaults,noatime"
-      
-      mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
-      mkdir /mnt/home
-      mkdir /mnt/boot
-      mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
-
-      BOOT_DIRECTORY=/boot
-      ESP_DIRECTORY=/boot
-      UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
-      UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
-      PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
-      PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
+        echo ""
+        sgdisk --zap-all $DEVICE
+        wipefs -a $DEVICE
+        PARTITION_BOOT="${DEVICE}1"
+        PARTITION_ROOT="${DEVICE}2"
+        DEVICE_ROOT="${DEVICE}2"
+        parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary $FILE_SYSTEM_TYPE 512MiB 100% set 1 boot on
+        sgdisk -t=1:ef00 $DEVICE
+        sgdisk -t=2:8e00 $DEVICE
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
+        sleep 5
+        pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
+        vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
+        lvcreate -L $ROOT_SIZE $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
+        lvcreate -l 100%FREE -n $LVM_VOLUME_HOME $LVM_VOLUME_GROUP
+        DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_ROOT"
+        DEVICE_HOME="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_HOME"
+        wipefs -a $PARTITION_BOOT
+        wipefs -a $DEVICE_ROOT
+        mkfs.fat -n ESP -F32 $PARTITION_BOOT
+        mkfs."$FILE_SYSTEM_TYPE" -L root $DEVICE_ROOT
+        mkfs."$FILE_SYSTEM_TYPE" -L home $DEVICE_HOME
+        
+        PARTITION_OPTIONS="defaults,noatime"
+        
+        mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
+        mkdir /mnt/home
+        mkdir /mnt/boot
+        mount -o "$PARTITION_OPTIONS" "$PARTITION_BOOT" /mnt/boot
+        BOOT_DIRECTORY=/boot
+        ESP_DIRECTORY=/boot
+        UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
+        UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
+        PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
+        PARTUUID_ROOT=$(blkid -s PARTUUID -o value $PARTITION_ROOT)
 }
 
 function install () {
-     pacstrap /mnt base base-devel
+        pacstrap /mnt base base-devel
 }
 
 function configuration (){
@@ -138,11 +137,11 @@ function configuration (){
 }
 
 function mkinitcpio(){
-       MODULES="amdgpu"
-       arch-chroot /mnt sed -i "s/MODULES=()/MODULES=($MODULES)/" /etc/mkinitcpio.conf
-       arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
-       arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt lvm2 filesystems /' /etc/mkinitcpio.conf
-       arch-chroot /mnt mkinitcpio -P
+        MODULES="amdgpu"
+        arch-chroot /mnt sed -i "s/MODULES=()/MODULES=($MODULES)/" /etc/mkinitcpio.conf
+        arch-chroot /mnt sed -i 's/ block / block keyboard keymap /' /etc/mkinitcpio.conf
+        arch-chroot /mnt sed -i 's/ filesystems keyboard / encrypt lvm2 filesystems /' /etc/mkinitcpio.conf
+        arch-chroot /mnt mkinitcpio -P
 }
 
 function bootloader(){
@@ -163,33 +162,33 @@ function bootloader(){
 }
 
 function users() {
-    create_user $USER_NAME $USER_PASSWORD
-    arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+        create_user $USER_NAME $USER_PASSWORD
+        arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 }
 
 function create_user() {
-    echo ""
-    echo -e "${LIGHT_BLUE}# create_user() step${NC}"
-    echo ""
+        echo ""
+        echo -e "${LIGHT_BLUE}# create_user() step${NC}"
+        echo ""
 
-    USER_NAME=$1
-    USER_PASSWORD=$2
-    arch-chroot /mnt useradd -m -G wheel,storage,optical -s /bin/bash $USER_NAME
-    printf "$USER_PASSWORD\n$USER_PASSWORD" | arch-chroot /mnt passwd $USER_NAME
+        USER_NAME=$1
+        USER_PASSWORD=$2
+        arch-chroot /mnt useradd -m -G wheel,storage,optical -s /bin/bash $USER_NAME
+        printf "$USER_PASSWORD\n$USER_PASSWORD" | arch-chroot /mnt passwd $USER_NAME
 }
 
 
 function pacman_install() {
-    PACKAGES=$1
-    for VARIABLE in {1..5}
-    do
-        arch-chroot /mnt pacman -Syu --noconfirm $PACKAGES
-        if [ $? == 0 ]; then
-            break
-        else
-            sleep 10
-        fi
-    done
+        PACKAGES=$1
+        for VARIABLE in {1..5}
+        do
+                arch-chroot /mnt pacman -Syu --noconfirm $PACKAGES
+                if [ $? == 0 ]; then
+                        break
+                else
+                        sleep 10
+                fi
+        done
 }
 
 function main (){
