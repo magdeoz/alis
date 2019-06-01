@@ -133,6 +133,8 @@ function configuration (){
         cryptsetup -d /mnt/etc/luks-keys/home open /dev/$LVM_VOLUME_GROUP/home home
         mkfs."$FILE_SYSTEM_TYPE" /dev/mapper/home
         mount /dev/mapper/home /mnt/home
+        echo "home /dev/$LVM_VOLUME_GROUP/home   /etc/luks-keys/home" >> /mnt/etc/crypttab
+
         ##
         genfstab -U /mnt >> /mnt/etc/fstab
         arch-chroot /mnt ln -s -f $TIMEZONE /etc/localtime
