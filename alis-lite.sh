@@ -22,8 +22,10 @@ DEVICE="/dev/sda"
 FILE_SYSTEM_TYPE="ext4"
 LVM_VOLUME_PHISICAL="lvm"
 LVM_VOLUME_GROUP="vg0'"
+LVM_VOLUME_SWAP="swap"
 LVM_VOLUME_ROOT="root"
 LVM_VOLUME_HOME="home"
+SWAP_SIZE="1G"
 ROOT_SIZE="4G"
 BOOT_DIRECTORY=""
 ESP_DIRECTORY=""
@@ -86,17 +88,24 @@ function partition() {
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
         sleep 5
+        
         pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
         vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
+        lvcreate -L $SWAP_SIZE $LVM_VOLUME_GROUP -n $LVM_VOLUME_SWAP
         lvcreate -L $ROOT_SIZE $LVM_VOLUME_GROUP -n $LVM_VOLUME_ROOT
-        lvcreate -l 100%FREE -n $LVM_VOLUME_HOME $LVM_VOLUME_GROUP
+        lvcreate -l 100%FREE $LVM_VOLUME_GROUP -n $LVM_VOLUME_HOME
+        
         DEVICE_ROOT="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_ROOT"
         DEVICE_HOME="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_HOME"
+        DEVICE_SWAP="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_SWAP"
+        
         wipefs -a $PARTITION_BOOT
         wipefs -a $DEVICE_ROOT
         mkfs.fat -n ESP -F32 $PARTITION_BOOT
         mkfs."$FILE_SYSTEM_TYPE" -L root $DEVICE_ROOT
         mkfs."$FILE_SYSTEM_TYPE" -L home $DEVICE_HOME
+        mkswap $DEVICE_SWAP
+        swapon $DEVICE_SWAP
         
         PARTITION_OPTIONS="defaults,noatime"
         
