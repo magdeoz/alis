@@ -21,33 +21,18 @@ set -o nounset                              # Treat unset variables as an error
 DEVICE="/dev/sda"
 FILE_SYSTEM_TYPE="ext4"
 LVM_VOLUME_PHISICAL="lvm"
-LVM_VOLUME_GROUP="vg"
+LVM_VOLUME_GROUP="vg0'"
 LVM_VOLUME_ROOT="root"
 LVM_VOLUME_HOME="home"
+ROOT_SIZE="4G"
 BOOT_DIRECTORY=""
 ESP_DIRECTORY=""
-#PARTITION_BOOT_NUMBER=0
 UUID_BOOT=""
 UUID_ROOT=""
 PARTUUID_BOOT=""
 PARTUUID_ROOT=""
 
- source alis.conf
-
-function sanitize_variables() {
-    DEVICE=$(sanitize_variable "$DEVICE")
-    SWAP_SIZE=$(sanitize_variable "$SWAP_SIZE")
-    ROOT_SIZE=$(sanitize_variable "$ROOT_SIZE")
-}
-
-function sanitize_variable() {
-    VARIABLE=$1
-    VARIABLE=$(echo $VARIABLE | sed "s/![^ ]*//g") # remove disabled
-    VARIABLE=$(echo $VARIABLE | sed "s/ {2,}/ /g") # remove unnecessary white spaces
-    VARIABLE=$(echo $VARIABLE | sed 's/^[[:space:]]*//') # trim leading
-    VARIABLE=$(echo $VARIABLE | sed 's/[[:space:]]*$//') # trim trailing
-    echo "$VARIABLE"
-}
+source alis.conf
 
 function check_variables() {
     check_variables_equals "PARTITION_ROOT_ENCRYPTION_PASSWORD" "PARTITION_ROOT_ENCRYPTION_PASSWORD_RETYPE" "$PARTITION_ROOT_ENCRYPTION_PASSWORD" "$PARTITION_ROOT_ENCRYPTION_PASSWORD_RETYPE"
@@ -71,27 +56,6 @@ function check_variables_value() {
     fi
 }
 
-function check_variables_boolean() {
-    NAME=$1
-    VALUE=$2
-    check_variables_list "$NAME" "$VALUE" "true false"
-}
-
-function check_variables_list() {
-    NAME=$1
-    VALUE=$2
-    VALUES=$3
-    REQUIRED=$4
-    if [ "$REQUIRED" == "" -o "$REQUIRED" == "true" ]; then
-        check_variables_value "$NAME" "$VALUE"
-    fi
-
-    if [ "$VALUE" != "" -a -z "$(echo "$VALUES" | grep -F -w "$VALUE")" ]; then
-        echo "$NAME environment variable value [$VALUE] must be in [$VALUES]."
-        exit
-    fi
-}
-
 function check_variables_equals() {
     NAME1=$1
     NAME2=$2
@@ -111,9 +75,6 @@ timedatectl set-ntp true
 
 function partition() {
     echo ""
-    echo -e "${LIGHT_BLUE}# partition() step${NC}"
-    echo ""
-
     sgdisk --zap-all $DEVICE
     wipefs -a $DEVICE
     PARTITION_BOOT="${DEVICE}1"
@@ -157,7 +118,14 @@ function install () {
 }
 
 function configuration (){
-
+        ## encrypt home
+        mkdir -m 700 /mnt/etc/luks-keys
+        dd if=/dev/random of=/mnt/etc/luks-keys/home bs=1 count=256 status=progress
+        cryptsetup luksFormat -v /dev/$LVM_VOLUME_GROUP/home /mnt/etc/luks-keys/home
+        cryptsetup -d /mnt/etc/luks-keys/home open /dev/$LVM_VOLUME_GROUP/home home
+        mkfs."$FILE_SYSTEM_TYPE" /dev/mapper/home
+        mount /dev/mapper/home /mnt/home
+        ##
         genfstab -U /mnt >> /mnt/etc/fstab
         arch-chroot /mnt ln -s -f $TIMEZONE /etc/localtime
         arch-chroot /mnt hwclock --systohc
@@ -225,8 +193,6 @@ function pacman_install() {
 }
 
 function main (){
-        configuration_install
-        sanitize_variables
         check_variables
         partition
         install
