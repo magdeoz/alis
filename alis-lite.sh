@@ -25,8 +25,8 @@ LVM_VOLUME_GROUP="vg0"
 LVM_VOLUME_SWAP="swap"
 LVM_VOLUME_ROOT="root"
 LVM_VOLUME_HOME="home"
-SWAP_SIZE="1G"
-ROOT_SIZE="4G"
+SWAP_SIZE="8G"
+ROOT_SIZE="25G"
 BOOT_DIRECTORY=""
 ESP_DIRECTORY=""
 UUID_BOOT=""
@@ -123,6 +123,7 @@ function partition() {
 
 function install () {
         pacstrap /mnt base base-devel
+        check_result "Failed"
 }
 
 function configuration (){
@@ -134,7 +135,6 @@ function configuration (){
         mkfs."$FILE_SYSTEM_TYPE" /dev/mapper/home
         mount /dev/mapper/home /mnt/home
         echo "home /dev/$LVM_VOLUME_GROUP/home   /etc/luks-keys/home" >> /mnt/etc/crypttab
-        arch-chroot /mnt sed -i 's\^.*home.*$\/dev/mapper/home        /home   ext4        defaults        0       2\' /etc/fstab
         ##
         genfstab -U /mnt >> /mnt/etc/fstab
         arch-chroot /mnt ln -s -f $TIMEZONE /etc/localtime
@@ -164,7 +164,6 @@ function bootloader(){
         arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="quiet"/GRUB_CMDLINE_LINUX_DEFAULT=""/' /etc/default/grub
         arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="'$CMDLINE_LINUX'"/' /etc/default/grub
         echo "" >> /mnt/etc/default/grub
-        echo "# alis" >> /mnt/etc/default/grub
         echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
 
         pacman_install "efibootmgr"
@@ -175,13 +174,12 @@ function bootloader(){
 function users() {
         create_user $USER_NAME $USER_PASSWORD
         arch-chroot /mnt sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+        pacman_install "git"
+        arch-chroot /mnt bash -c "echo -e \"$USER_PASSWORD\n$USER_PASSWORD\n$USER_PASSWORD\n$USER_PASSWORD\n\" | su $USER_NAME -c \"cd /home/$USER_NAME && git clone https://aur.archlinux.org/$AUR.git && (cd $AUR && makepkg -si --noconfirm) && rm -rf $AUR\""
 }
 
 function create_user() {
         echo ""
-        echo -e "${LIGHT_BLUE}# create_user() step${NC}"
-        echo ""
-
         USER_NAME=$1
         USER_PASSWORD=$2
         arch-chroot /mnt useradd -m -G wheel,storage,optical -s /bin/bash $USER_NAME
@@ -200,6 +198,16 @@ function pacman_install() {
                         sleep 10
                 fi
         done
+}
+
+check_result () {
+        if [ $? -ne 0 ]; then
+                echo ""
+                echo -e " [ERROR]: $1 -- ABORTING!" 1>&2
+                exit 1
+        else
+                echo -e "[DONE]"
+        fi
 }
 
 function main (){
