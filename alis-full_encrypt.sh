@@ -187,10 +187,9 @@ function bootloader(){
         
         echo "Installing bootloader..."
         mkdir /boot/grub
-        grub-mkconfig -o /boot/grub/grub.cfg
-        
+        arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
         arch-chroot /mnt grub-install --target=x86_64-efi --bootloader-id=grub --efi-directory=$ESP_DIRECTORY --recheck
-        grub-install --target=i386-pc --recheck "$DRIVE"
+        arch-chroot /mnt grub-install --target=i386-pc --recheck "$DEVICE"
         #arch-chroot /mnt grub-mkconfig -o "$BOOT_DIRECTORY/grub/grub.cfg"
 }
 
