@@ -10,6 +10,5 @@ rm -f alis.sh
 
 wget https://raw.githubusercontent.com/magdeoz/alis/master/alis.conf
 wget https://raw.githubusercontent.com/magdeoz/alis/master/alis-lite.sh
-wget https://raw.githubusercontent.com/magdeoz/alis/master/alis.sh
-
-chmod +x alis.sh
+wget https://raw.githubusercontent.com/magdeoz/alis/master/alis-full_encrypt.sh
+chmod +x alis-full_encrypt.sh
