@@ -92,10 +92,13 @@ function partition() {
 
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher \
                 serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool \
-                --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
+                --iter-time 5000 --use-random  luksFormat --type luks2 $PARTITION_ROOT
         echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- \
                 open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
         sleep 5
+
+        echo -n "$PARTITION_BOOT_ENCRYPTION_PASSWORD" | cryptsetup -v luksFormat $PARTITION_BOOT
+        echo -n "$PARTITION_BOOT_ENCRYPTION_PASSWORD" | cryptsetup open $PARTITION_BOOT cryptboot
         
         pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
         vgcreate $LVM_VOLUME_GROUP /dev/mapper/$LVM_VOLUME_PHISICAL
@@ -108,9 +111,6 @@ function partition() {
         DEVICE_SWAP="/dev/mapper/$LVM_VOLUME_GROUP-$LVM_VOLUME_SWAP"
         DEVICE_BOOT="dev/mapper/cryptboot"
 
-        echo -n "$PARTITION_BOOT_ENCRYPTION_PASSWORD" | cryptsetup -v luksFormat $PARITION_BOOT
-        echo -n "$PARTITION_BOOT_ENCRYPTION_PASSWORD" | cryptsetup open $PARTITION_BOOT cryptboot
-        
         echo "Format partitions..."
         mkfs.fat -F32 $PARTITION_EFI
         mkfs.ext4 /dev/mapper/cryptboot
@@ -123,13 +123,14 @@ function partition() {
         PARTITION_OPTIONS="defaults,noatime"
         
         mount -o "$PARTITION_OPTIONS" "$DEVICE_ROOT" /mnt
-        mkdir /mnt/{home,boot,efi}
+        mkdir /mnt/{home,boot}
+        mkdir /mnt/efi
         mount "$DEVICE_HOME" /mnt/home
         mount /dev/mapper/cryptboot /mnt/boot
         mount $PARTITION_EFI /mnt/efi
 
-        BOOT_DIRECTORY=/boot
-        ESP_DIRECTORY=/efi
+        BOOT_DIRECTORY="/boot"
+        ESP_DIRECTORY="/efi"
         UUID_BOOT=$(blkid -s UUID -o value $PARTITION_BOOT)
         UUID_ROOT=$(blkid -s UUID -o value $PARTITION_ROOT)
         PARTUUID_BOOT=$(blkid -s PARTUUID -o value $PARTITION_BOOT)
@@ -137,6 +138,8 @@ function partition() {
 }
 
 function install () {
+        pacman_install "reflector"
+        reflector --country 'United States' --age 12 --protocol https --sort rate --save /etc/pacman.d/mirrorlist
         pacstrap /mnt base base-devel
 }
 
@@ -183,6 +186,7 @@ function bootloader(){
         arch-chroot /mnt sed -i 's/GRUB_CMDLINE_LINUX=""/GRUB_CMDLINE_LINUX="'$CMDLINE_LINUX'"/' /etc/default/grub
         echo "" >> /mnt/etc/default/grub
         echo "GRUB_DISABLE_SUBMENU=y" >> /mnt/etc/default/grub
+        echo "GRUB_ENABLE_CRYPTODISK=y" >> /mnt/etc/default/grub
         pacman_install "efibootmgr"
         
         echo "Installing bootloader..."
