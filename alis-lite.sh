@@ -82,11 +82,15 @@ function partition() {
         PARTITION_BOOT="${DEVICE}1"
         PARTITION_ROOT="${DEVICE}2"
         DEVICE_ROOT="${DEVICE}2"
-        parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary $FILE_SYSTEM_TYPE 512MiB 100% set 1 boot on
+        parted -s $DEVICE mklabel gpt mkpart primary fat32 1MiB 512MiB mkpart primary \
+                $FILE_SYSTEM_TYPE 512MiB 100% set 1 boot on
         sgdisk -t=1:ef00 $DEVICE
         sgdisk -t=2:8e00 $DEVICE
-        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher serpent-xts-plain64 --key-size 512 --key-file=- --hash whirlpool --iter-time 500 --use-random  luksFormat --type luks2 $PARTITION_ROOT
-        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open $PARTITION_ROOT $LVM_VOLUME_PHISICAL
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup -v --cipher aes-xts-plain64 \
+                --key-size 512 --key-file=- --hash sha512 --iter-time 10000 \
+                --use-random  luksFormat --type luks2 $PARTITION_ROOT
+        echo -n "$PARTITION_ROOT_ENCRYPTION_PASSWORD" | cryptsetup --key-file=- open \
+                $PARTITION_ROOT $LVM_VOLUME_PHISICAL
         sleep 5
         
         pvcreate /dev/mapper/$LVM_VOLUME_PHISICAL
